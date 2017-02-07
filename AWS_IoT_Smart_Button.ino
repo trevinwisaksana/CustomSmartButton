@@ -16,12 +16,23 @@
 #include <aws_iot_mqtt.h>
 #include <aws_iot_version.h>
 #include "aws_iot_config.h"
+#include <aws_iot_config_SDK.h>
+#include <aws_iot_error.h>
+
+#include <Wire.h>
+#include "rgb_lcd.h"
 
 aws_iot_mqtt_client myClient; // init iot_mqtt_client
 char msg[32]; // read-write buffer
 int cnt = 0; // loop counts
 int rc = -100; // return value placeholder
 bool success_connect = false; // whether it is connected
+
+// LCD Objects
+rgb_lcd lcd;
+const int colorR = 255;
+const int colorG = 0;
+const int colorB = 0;
 
 // Button objects
 const int buttonPin = 6; // Button pin 
@@ -33,6 +44,8 @@ char buttonCommandState;
 void setup() {
   // Start Serial for print-out and wait until it's ready
   Serial.begin(115200);
+  // set up the LCD's number of columns and rows:
+  lcd.begin(16, 2);
   // initialize the pushbutton pin as an input:
   pinMode(buttonPin, INPUT);
   
@@ -83,16 +96,29 @@ void loop() {
       case 'S': 
         // Generate a new message in each loop and publish to "sdk/test/Python"
         sprintf(msg, "Hello from the other side %d", cnt);
+        // set up the color of the RGB
+        lcd.setRGB(0, 255, 0);
+        // Print a message to the LCD.
+        lcd.print(msg);
+        // Print in console 
         Serial.println(msg);
 
         // Publishes the message
         if((rc = myClient.publish("sdk/test/Python", msg, strlen(msg), 1, false)) != 0) {
+           // set up the color of the RGB
+           lcd.setRGB(255, 0, 0);
+           // Print a message to the LCD.
+           lcd.print("Publish failed!");
            Serial.println(F("Publish failed!"));
            Serial.println(rc);
         }
         
         // Get a chance to run a callback
         if((rc = myClient.yield()) != 0) {
+          // set up the color of the RGB
+           lcd.setRGB(255, 0, 0);
+           // Print a message to the LCD.
+           lcd.print("Yield failed!");
            Serial.println("Yield failed!");
            Serial.println(rc);
         }
